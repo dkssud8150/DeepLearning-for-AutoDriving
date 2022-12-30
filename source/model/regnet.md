@@ -2,7 +2,7 @@
 
 ## Designing Network Design Spaces
 
-RegNet은 EfficientNet보다 빠르고 성능이 좋은 모델이다. Tesla의 HydraNet에서도 RegNet을 사용했다. 
+RegNet은 EfficientNet보다 빠르고 성능이 좋은 모델이다. Tesla의 HydraNet에서도 RegNet을 사용했다.
 
 RegNet은 EfficientNet처럼 하나의 best model을 만드는 것이 아니라 뛰어난 모델을 어떤 세팅에서도 사용할 수 있도록 design space를 구성하는 것이 중심이다. design space 라는 것은 NAS에서의 search space와 유사한 의미지만, search space에서는 단 하나의 instance를 뽑아내는 것이 목표였다면, design space에서는 instance들을 뽑아내기 위한 space를 직접 찾아내는 것이 목표가 된다.
 
@@ -108,9 +108,6 @@ $ F(e) = \frac{1}{n} \sum_{i=1}^n 1[e_i < e] $
 3. 디자인 공간의 속성을 통해 insight를 얻는다.
 4. insight를 통해 다시 디자인 공간을 재정의하여 더 나은 디자인 공간을 만든다.
 
-&nbsp;
-
-<img src="../../assets/design_space_design.png">
 
 &nbsp;
 
@@ -118,11 +115,137 @@ $ F(e) = \frac{1}{n} \sum_{i=1}^n 1[e_i < e] $
 
 ## The AnyNet Design Space
 
+이번에는 표준으로 고정된 네트워크로 가정한 네트워크의 구조를 탐구해보고자 한다. 즉, 블럭의 수, 블럭의 너비, 블럭의 다른 매개변수들에 대한 탐구이다. 
+
+AnyNet의 design space는 아래 그림과 같은 구조로 되어 있다.
+
 <img src="../../assets/anynet.png">
 
+네트워크의 기본 뼈대는 `stem`, `body`, `head` 로 이루어져 있고, body는 다시 세부적으로 여러 개의 stage로 구성되어 있으며 각 stage는 또 다시 여러 개의 block으로 이루어져 있다. 각 stage의 자유도는 block의 개수, width, block parameter 들에 의해 결정되고, block들은 stride에 따라 다르게 생겨나기도 하며, 아예 다른 종류의 block도 사용 가능하다.
 
+&nbsp;
 
+표준이 되는 AnyNetX는 16 degrees of freedom 를 가지는데, 이는 4개의 stage, 각 stage마다의 4개의 parameter를 가지기 때문이다. 4개의 파라미터란 block의 개수 $ d_i $ , block width $ w_i $, bottleneck ratio $ b_i $, group width $ g_i $ 를 의미한다. 이 값들을 변경해가며 다양한 조합을 생성한다. 각 파라미터의 제약은 다음과 같다.
 
+- $ d_i \leq 16 $
+- $ w_i \leq 1024 \; (only, \, w_i\,\%\,8 \,= \,0 ) $
+- $ b_i \in {1,2,4} $
+- $ g_i \in {1,2,4,8,16,32} $
+
+&nbsp;
+
+&nbsp;
+
+이런 파라미터들에 대한 제약(constriaint)를 다양하게 부여하며 RegNet에 도달하는 과정을 살펴본다. 그 과정이 아래의 그림이다.
+
+<img src="../../assets/design_space_design.png">
+
+&nbsp;
+
+1. $ AnyNetX_A $
+    아무런 제약이 존재하지 않는 AnyNetX 가 $ AnyNetX_A $ 이다. 많은 경우의 수가 존재하여 자유도가 굉장히 높다.
+
+    &nbsp;
+
+2. $ AnyNetX_B $
+    A 버전에서 bottleneck ratio $ b_i $ 에 대한 제약(constraint)만 추가한 것이 $ AnyNetX_B $ 이다. bottleneck ratio를 1,2,4 중에 하나로 고정시킨다. ($b_i$ = b)
+
+    <img src="../../assets/anynetx_b.png">
+
+    &nbsp;
+
+    위의 그래프는 A,B버전에 대한 EDF이다. 여기서 알 수 있는 것은 bottleneck ratio 제약조건이 있는 것과 없는 것이 차이가 없다는 것이다. 그래서 이후에는 bottleneck ratio를 고정한 채로 테스트한다.
+
+    &nbsp;
+
+3. $ AnyNetX_C $
+    B버전에서 shared group width를 사용해본다. 즉 모든 스테이지에 대해 group width도 하나의 같은 수로 고정한다. ($g_i$ = g)
+
+    <img src="../../assets/anynetx_c.png">
+
+    여기서도 알 수 있듯이 차이가 없다. 따라서 다음 테스트에서도 고정한 채로 진행한다.
+
+    &nbsp;
+
+4. $ AnyNetX_D $
+    이번에는 C 모델에서 네트워크의 뒤로 갈수록 block width가 커지도록 하는 제약을 추가한다. ($w_{i+1} \leq w_i$)
+
+    <img src="../../assets/anynetx_d.png">
+
+    그림에서 볼 수 있듯이 해당 제약으로 인해 성능이 좋아졌다. block width를 키웠을 때 가장 성능이 좋았고, 그 다음은 C버전, 그 다음은 width를 고정한 것이고, width가 뒤로갈수록 작아질 때 성능이 가장 안좋았다.
+
+    &nbsp;
+
+5. $ AnyNetX_E $
+    D 모델에서 width 처럼 depth도 뒤로갈수록 키워보았다.
+
+    <img src="../../assets/anynetx_e.png">
+
+    이 또한, 성능이 개선되었다.
+
+    &nbsp;
+
+&nbsp;
+
+## The RegNet Design Space
+
+<img src="../../assets/anynetx_e_test.png">
+
+위의 이미지는 $ AnyNetX_E $ 에 대한 더 심층 연구를 위해 20개의 최고의 성능을 가진 모델을 가져와 그들의 block width를 그린 것이다. 실제로 우리는 width를 매 index마다 높일 수 있지만, 좀 더 간결한 design space를 위해 경량화(quantizing)를 해야 한다. 이 때 index가 바로 depth, 즉 block의 개수가 된다.
+
+&nbsp;
+
+경량화를 위해 block width에 대해 `linear parameterization` 를 사용한다.
+
+$ u_j = w_0 + w_a \cdot j \; for \; 0 \leq j < d $ 
+
+- $ w_0 $ : 초기 너비 (initial width)
+- $ w_a $ : 기울기 (slope)
+- d : 깊이 (depth)
+
+초기 너비는 당연히 0보다 커야 하고, width가 점차 증가해야 하므로 기울기도 양수가 되야 한다. ($w_o$ > 0, $w_a$ > 0)
+
+&nbsp;
+
+여기서 이전 width보다 얼마나 커졌는지에 대한 파라미터인 $ w_m $ 를 추가한다. 
+
+$ u_j = w_0 \cdot w_m^{s_j} $
+
+- $ w_m $ : 이전 width와 현재 width의 비율
+- $ s_j $ : stride
+
+&nbsp;
+
+block의 수는 다음과 같은 식으로 구한다.
+
+$ d_i = \sum_j 1[round(s_j) = i] $
+
+&nbsp;
+
+&nbsp;
+
+이렇게 총 6개의 파라미터(d,w_0, w_a, w_m, b, g) 로 결정이 되는 degign space를 regular network, 또는 $ RegNet $ 이라 한다. 여기서 RegNet은 RegNetX와 같은 말이며, RegNetX에 SE(Squeeze-and-Excitation) 연산을 추가하여 RegNetY 로 표현할 수 있다.
+
+&nbsp;
+
+저자들은 RegNetX의 design space를 다음과 같은 조건을 제시했다.
+
+- b = 1, d <= 40, w_m >= 2
+- parameter와 activation에 제한을 둔다. -> square-root와 linear하게 증가.
+
+&nbsp;
+
+## Analyzing the RegNetX Design Space
+
+### RegNet trend
+
+<img src="../../assets/analyze_regnet.png">
+
+테스트 결과 최적의 depth는 ~20 block정도로 다소 작은 값을 가진다. 최적의 bottleneck ratio는 1.0으로 즉 bottleneck이 없는 것이 가장 좋은 성능을 보였다. width multipler Wm 은 2.5정도가 가장 좋았다고 한다. 
+
+&nbsp;
+
+&nbsp;
 
 
 
