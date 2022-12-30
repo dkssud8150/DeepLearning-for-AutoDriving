@@ -1,3 +1,5 @@
 data
 !data/kitti/train/readme.txt
 !data/download_dataset.sh
+*/__pycache__
+*/*/__pycache__
