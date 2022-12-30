@@ -1,259 +1,104 @@
 # 데이터셋 비교
 
-<img src="../assets/datasets/dataset.png" width="70%">
-
-## 1. tsSimple
-
-차선인식 학습과 평가에 빈번하게 사용되는 데이터셋이다.
-
-- 이미지 크기 : 1280 * 720(w,h)
-- 데이터셋 크기 : 140,000장
-    - 그러나 라벨링 되어있는 데이터는 1/20, 6000장
-         - train 3626
-         - valid 358
-         - test 2782
-    - 나머지는 흐름을 파악할 수 있도록 추가한 라벨없는 이전 프레임 이미지
-- 차선 분류
-    - default는 유무 판별
-    - 8가지 분류 데이터셋 활용하려면 분류 코드를 실행
-        - Sigle Dashed
-        - Double Dashed
-        - Botts' Dots
-        - Double Yellow Continuous
-        - Single White Continuous
-        - Single Yellow Continuous
-        - Double White Continuous
-        - Unknown (차선 없을때)
-
-        <img src="../assets/datasets/tusimplelabel.png">
-
-        [분류 코드 github](https://github.com/fabvio/TuSimple-lane-classes)
-
-- 특이 사항
-    - 모든 데이터에 대해 19장의 연속된 이전 프레임 데이터가 존재, 즉 20장의 연속된 차선 이미지, 마지막장에만 차선 label되어 있음
-
-장점
-
-<img src="../assets/datasets/tusimple1.png">
-
-- 다양한 도로 환경의 데이터 존재
-    - 일반 도로환경, 흐릿한 차선, 차선없이 요철로 이루어진 구간, 날씨에 관해서는 없음
-- 6400장 정도면 적절한 데이터셋이므로 많은 논문에 사요되고 있다. RNN과 같이 이전 데이터를 활용해서 학습하는 네트워크에 용이
-- 차선 데이터를 인스턴스 단위로 분리해서 제공해준다.
-
-<br>
-
-단점
-<img src="../assets/datasets/tusimple2.png">
-
-- label이 json형태여서 픽셀 기반으로 segmentation이 되지 않음, 즉 차선 원소 개수 만큼의 차선 데이터만 존재
-- h_sample에 대해 차선이 존재하면 lanes에 기록되는데, 즉 lanes의 개수만큼의 차선데이터가 기록되어 해당 h_sample 위치에 차선이 존재하면 차선의 width좌표가 들어가고, 없으면 -2가 들어간다.
-
-<br>
-
-[TuSimple papaerswithcode 사이트](https://paperswithcode.com/dataset/tusimple)
-
-[datasets repository](https://github.com/TuSimple/tusimple-benchmark/issues/3)
-
-<br>
-
----
-
-TuSimple을 사용한 논문 중 가장 많은 github star을 받은 논문 TOP 2
-- 🥇[Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591)   | (15 Feb 2018)
-  - ⭐star : 1,797
-  - 🚀[repository](https://github.com/MaybeShewill-CV/lanenet-lane-detection)
-  - Framework : Tensorflow
-
-<br>
-
-- 🥈[Ultra Fast Structure-aware Deep Lane Detection](https://arxiv.org/abs/2004.11757v4)   | (24 Apr 2020)
-  - ⭐star : 1,193
-  - 🚀[repository](https://github.com/cfzd/Ultra-Fast-Lane-Detection)
-  - Framework : Pytorch
-
-<br>
-
-<br>
-
----
-
-## 2. CULane
-
-교통과 차선인식에 관련된 **연구**를 위한 데이터셋으로, 6개의 카메라를 통해 55시간 분량의 데이터를 수집해서, 총 133,235 프레임으로 구성되어 있다. 총 용량이 40기가가 넘는 만큼 차선인식을 위한 단일 데이터셋 중 규모가 매우 큰 편이기 때문에 차선 인식 논문에 빈번하게 사용된다. 구글 드라이브에서 다운 받을 수 있고, 6개으 서로 다른 데이터가 저장되어 있다.
-
-- 차선 분류
-    - tusimple과 동일하게 default는 유무 판별, 8가지 분류가 가능하지만 이를 하기 위해서는 분류 코드를 실행해야 함
-
-- 데이터셋 크기
-    - train 88880
-    - valid 9675
-    - test 34680
-- 이미지 크기 : 1640 * 590
-- 특이 사항
-    - 사용하는 이미지의 가로가 조금 더 길다.
-    - 밤에 수집한 어두운 조명 데이터가 존재한다.
-
-장점
-- 압도적으로 큰 용량의 데이터셋
-
-<br>
-
-단점
-- 픽셀 단위로 분할되어 있지 않고, json도, csv도 아닌 숫자의 나열로 labeling 되어 있다. 숫자를 보면 소수로 되어있는데, 이는 차선 위치를 직접 추출한게 아니라 차선을 그린 후 3차 스플라인(cubic spline) 보간으로 얻은 함수를 제공하기 때문이다.
-- 대신 이 텍스트파일을 픽셀 단위 레이블로 변환해주는 코드가 공식 사이트에 있고, 평가 과정을 도와주는 코드가 공식적으로 제공된다.
-
-<br>
-
-[공식 사이트](https://xingangpan.github.io/projects/CULane.html)
-
-<br>
-
----
-
-## 3. BDD100K
-
-<img src="../assets/datasets/bdd100k.png">
-
-버클리 인공지능 연구 실험실에서 공개한 오픈소스로, 120,000,000개의 엄청난 이미지 데이터를 가진 데이터셋이다. 이미지 뿐만 아니라 GPS, IMU, timestamp까지 포함되어 있어 다양한 용도로 활용된다. 이 데이터셋은 차선인식을 위해 만들어진 데이터셋이 아니라 **도로 주행 상황에서 사용되는 모든 네트워크를 타겟으로 제작되었기 때문에 차선 뿐만 아니라 차량, 사람 등도 라벨링되어 있다.**
-
-- 차선 분류
-    - 2*2*8 + 1가지
-- 데이터셋 크기
-    - train : 84,000,000
-    - valid + test : 36,000,000
-- 이미지 크기
-    - 1280 * 720
-
-
-- **특이 사항**
-
-다른 데이터셋에 비해 차선 정보가 조금 복잡하게 되어 있다.
-
-<img src="../assets/datasets/bdd100klabel.png">
-
-- lanedirection : 차선의 방향 (수직 / 수평)
-    - 0 : parallel
-    - 1 : vertical
-- lanestyle : 차선의 모양 (실선 / 점선)
-    - 0 : solid
-    - 1 : dashed
-- lanetype : 차선의 종류 (싱글 / 더블) 과 색
-    - 0 : crosswalk (횡단보도)
-    - 1 : double other
-    - 2 : double white
-    - 3 : double yellow
-    - 4 : road curb (커브길)
-    - 5 : single other
-    - 6 : single white
-    - 7 : single yello
-
-총 type의 개수가 2*2*8이고, 차선이 아닌 지형의 조합, 1까지 총 33개의 조합을 가진다.
-
-<br>
-
-장점
-- 밤낮 시간대, 비, 흐린 날씨 등 수많은 상황이 존재한다.
-- 데이터의 개수가 아주 많고, GPS, IMU에 대한 정보와 함께 객체 정보가 존재
-
-<br>
-
-단점
-<img src="../assets/datasets/bdd100klabel2.png">
-
-- poly2d 즉 두 점의 위치를 제공하기 때문에 직관적으로 파악하기 힘들다.
-
-<br>
-
-[공식 사이트](https://bair.berkeley.edu/blog/2018/05/30/bdd/)
-
-[swithcode](https://paperswithcode.com/search?q_meta=&q_type=&q=bdd100k)
-
-<img src="../assets/datasets/bdd100kdataset.png">
-
-매우 다양한 용도로 구성되어 있기 때문에, 차선 인식을 위해 lane marking 을 클릭한다.
-
-<br>
-
----
-
-## 4. KITTI
-
-KITTI 데이터셋은 객체 인식, 추적, 깊이 추정 등 매우 많이 사용되는 데이터셋이다. 여기에 차선 인식을 위한 데이터셋도 존재한다.
-
-- 차선 분류
-    - 3가지 (도로 전체, 주행중인 도로, 도로 x)
-- 데이터셋 크기
-    - train : 289
-    - test : 290
-- 이미지 크기
-    - 1242 * 375
-    - 이미지마다 조금씩 다름
-
-- 특이 사항
-    - velodain16으로 측정한 라이다 데이터도 제공
+CVPR2020에서 소개된 자율주행 오픈소스 데이터셋 TOP5를 비교하고자 한다.
 
 &nbsp;
 
-semantic semgnetation 데이터로는 pixel-level 이 있고, instance-level 이 있다.
+## 1. BDD100K (UC버클리 대학이 공개한 자율주행용 거대 데이터셋)
 
-<img src="../assets/pixel-level.png">
+<img src="/assets/bdd100k.png">
 
-<img src="../assets/instance-level.png">
+BDD100K 데이터셋은 UC버클리 대학이 2018년에 공개한 자율주행 데이터셋으로 주석 처리된 10만 개 이상의 다양한 비디오 클립에 주행 장면의 가장 큰 데이터셋을 수집했다고 한다. lane detect, drivable area segmentation, object detection, segmentation, MOT, tracking 등에 대한 annotation이 존재한다.
 
-pixel level이 첫번째 사진이고, 이는 이미지에서 모든 픽셀을 분류한다. instance level은 물체에 대한 픽셀들만 분류한다.
-
-&nbsp;
-
-장점
-- 픽셀 단위로 labeling되어 있음
-- 라이다 데이터도 함께 제공
-
-<img src="../assets/datasets/kitti.png">
-
-<br>
-
-단점
-- 데이터셋의 크기가 500으로 네트워크 학습에 사용할 수 없을 정도로 너무 작다. 그래서 검증 용도로 사용하는 것이 좋을 듯 하다.
-
-<br>
-
-[공식 사이트](http://www.cvlibs.net/datasets/kitti/eval_road.php)
-
-<br>
-
----
-
-## 5. Cityscapes
-
-Cityscapes 데이터셋은 대용량 데이터셋으로 semantic, instance-wise, dense pixel annotation 레이블을 제공한다.
+각 비디오는 약 40초 길이이며 초당 30frame에 화질은 720p이다. 미국 전역의 거리에서 약 50,000번의 주행을 통해 수집했다고 한다. 또한 다양한 시간대와 다양한 날씨에서 촬영했다. 약 100만 대의 자동차, 30만 개 이상의 도로 표지판, 13만 명의 보행자가 포함되어 있다. 각 비디오에는 GPS, IMU 에 대한 데이터도 포함되어 있다.
 
 &nbsp;
 
-- 데이터셋 크기
-    - fine label 이미지 5000개
-        - training : 2975
-        - validation : 500
-        - testing : 1525
-    - coarse label 이미지 20000개
-- 이미지 크기
-    - 512 x 256
-
-장점
-- 50개의 도시에서 좋은 날씨 환경에서 촬영
-- 라벨링은 총 8개 카테고리(평지, 사람, 차량, 건축물, 객체, 자연, 하늘, void) 클래스로 구별되어 있다.
+- site : [https://www.bdd100k.com](https://www.bdd100k.com)
 
 &nbsp;
 
-[공식 사이트](https://www.cityscapes-dataset.com/)
+&nbsp;
+
+## 2. Google Landmarks Dataset v2 (구글에서 공개한 대규모 랜드마크 데이터셋)
+
+<img src="/assets/gldv2.png">
+
+Google Landmarks dataset v2 데이터셋은 구글이 2019년에 공개한 랜드마크 인식 데이터셋으로, 20만 개 이상의 랜드마크에 대한 500만 개의 이미지를 제공한다.
+
+이 데이터셋에서는 이전 데이터셋과는 달리 롱테일 현상(long-tailed class distribution), 엄청난 양의 영역 외 테스트 사진들과 클래스 내부 분산(intra-class variability) 등과 같은 실험적인 특징을 가지고 있다.
+
+또한, 제한적인 지역에서만 촬영한 것이 아닌 세계적으로 방문하며 유명하지 않은 랜드마크에 대한 이미지들도 촬영했다.
+
+<img src="/assets/gldv2_2.png">
 
 &nbsp;
 
----
+- site : [https://storage.googleapis.com/gld-v2/web/index.html](https://storage.googleapis.com/gld-v2/web/index.html)
 
 &nbsp;
 
-### reference
+&nbsp;
 
-- https://gnaseel.tistory.com/45
-- https://gnaseel.tistory.com/46
+## 3. Mapillary Street-Level Sequence (장소인식 분야의 평생학습을 위한 데이터셋)
+
+<img src="/assets/msls.png">
+
+Mapillary 또는 Maperial Street-Level Sequence 는 도심지와 교외의 장소 인식 분야에서의 평생학습(AI가 새로운 데잍를 학습할 때 기존에 습득한 정보를 잊는 문제를 해결하고 이전에 배운 지식과 새로운 지식을 모두 다루는 기술)을 위한 2020년에 공개된 데이터셋이다. MSLS는 총 9년에 걸쳐 수집된 데이터셋이라고 한다.
+
+MSLS 데이터셋은 160만 개 이상의 이미지를 포함하고 있으며, 이 데이터셋은 6개 대륙, 30개 도시에서의 다양한 계절, 날씨, 일광조건, 다양한 카메라 유형, 다양한 시점, 다양한 건물 및 주변 환경, 한 장면 안에서의 움직이는 물체를 다룬다. 또한 각 이미지들에는 GPS, 촬영 시간, 나침반 각도, 낮/밤, 시야 방향(전면, 후면, 측면) 을 나타내는 메타데이터도 제공된다.
+
+&nbsp;
+
+- site : https://github.com/mapillary/mapillary_sls
+
+&nbsp;
+
+&nbsp;
+
+## 4. nuScenes dataset (자율주행을 위한 멀티모달 데이터셋)
+
+<img src="/assets/nuscenes.png">
+
+nuScenes(nuTonomy scenes)는 자율주행을 위한 2019년에 공개된 대규모 공개 데이터셋이다. 
+
+카메라 6대, 레이다 5대, 라이다 1대를 탑재한 최촤의 자율주행형 데이터셋이다. nuScenes는 보스턴과 싱가포르에서 1000개의 장면을 촬영했으며 각 장면의 길이는 20초이고, 23개 클래스와 8개 속성에 대해 3D bounding box로 labeling되어 있다. 약 140만 개의 카메라 이미지, 390만 개의 라이다 스위프(주어진 시선 방향으로 발사된 하나의 펄스에 대한 데이터), 140만 개의 레이더 스위프 및 4만 개의 키프레임(전환 시작점 및 종료점)에 있는 140만 개의 객체 bounding box를 가지고 있다. GPS, IMU 데이터도 함께 수집했다.
+
+&nbsp;
+
+- site : https://www.nuscenes.org/nuscenes
+
+&nbsp;
+
+&nbsp;
+
+## 5. Waymo dataset (Waymo에서 공개한 자율주행 데이터셋)
+
+<img src="/assets/waymo.png">
+
+Waymo가 2019년에 공개한 자율주행 데이터셋으로 waymo에서 비상업적 용도로 자율주행 관련 데이터로 활용하고자 무료 제공한다. 피닉스, 마운틴뷰, 캘리포니아, 샌프란시스코 등의 25개 도시에서 1140개의 장면을 촬영했으며 각 장면의 길이는 20초이고, 5개의 고품질의 LiDAR 데이터셋을 함께 제공한다. 도심/교외 구간, 낮/밤/새벽, 일광량 정도, 비 등에 대한 다양한 조건에서 주행했다.
+
+자동차, 보행자, 자전거, 표지 4가지만 꼼꼼하게 구분하여 label되어 있고, 전체 라벨은 120만 개의 2D label(Camera)과 1200만 개의 3D label(LiDAR)이 포함되어 있다.
+
+센서는 미드 레인지 라이다 1개, 단거리 라이다 4개이고, 전면과 측면에 장착된 카메라 5대로 구성되어 있다. 
+
+&nbsp;
+
+- site : www.waymo.com/open
+
+&nbsp;
+
+&nbsp;
+
+## reference
+
+1. https://rdx-live.tistory.com/90
+2. https://www.oss.kr/oss_guide/show/3dbea652-7956-45c2-9aa2-995a16649d84?page=1
+
+&nbsp;
+
+&nbsp;
+
+5개 모두 자율주행 데이터셋이라곤 하지만, 실질적으로 OD(object detection), segmentation task를 수행하기 위해서는 BDD100K, nuScenes, waymo 데이터셋을 사용해야 한다.
+
+image panoptic segmentation을 지원하는 데이터셋에는 COCO, cityscapes, kitti, bdd100k 등이 있다. lidar 데이터가 있는 데이터셋으로는 nuscenes, semanticKITTI, waymo, kitti360 등이 있다. 이 두개가 중복되는 데이터셋은 없으므로, 각각 따로 수행하는 것이 좋아보인다. 그래서 panoptic에서는 bdd100k를 사용한다. lidar에서는 nuscenes나 waymo를 사용한다.
