@@ -322,8 +322,6 @@ cityscapes
 
 gtFine에는 50개의 도시별로 annotation이미지와 각 클래스별 polygon 정보가 들어 있다.
 
-<img src="/data\cityscapes\train\Annotations\aachen\aachen_000000_000019_gtFine_color.png">
-
 ```txt
 {
     "imgHeight": 1024, 
