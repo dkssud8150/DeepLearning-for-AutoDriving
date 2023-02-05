@@ -12,6 +12,9 @@ import torch.optim as optim
 
 import torchvision
 
+# --------------------- file load ---------------------- #
+from ..model.backbone.resnet import *
+
 def set_seed(seed : int = 42) -> None:
     np.random.seed(seed)
     random.seed(seed)
@@ -31,32 +34,26 @@ def generate_data(input_dim, num_samples, num_batches):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="arguments")
-    parser.add_argument("--gpus", type=int, nargs="+",
+    parser.add_argument("-g","--gpus", type=int, nargs="+",
                         help="List of GPU device id", default=[])
-    # parser.add_argument("--mode", type=str,
-    #                     help="train / val / test", default="train")
-    parser.add_argument("--cfg", type=str,
-                        help="model config path", default=None)
+    parser.add_argument("-p","--param", type=str, default="config/kitti_resnet.json",
+                        help="hyper parameter files")
+    parser.add_argument("--depth", type=int,
+                        help="model layer number", default=50)
     parser.add_argument("--checkpoint", type=str,
                         help="model checkpoint path", default=None)
-    parser.add_argument("--dataset", type=str,
+    parser.add_argument("-d","--dataset", type=str,
                         help="what you use dataset", default="kitti")
+    parser.add_argument("--mode", type=str,
+                        help="train / valid / test", default="train")
+    parser.add_argument("--n_class", type=int, default=10,
+                        help="what number you want to classify")
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit()
     args = parser.parse_args()
     return args
-
-class testModel(nn.Module):
-    def __init__(self, input_dim):
-        super(testModel, self).__init__()
-        self.input_dim = input_dim
-        self.linear = nn.Linear(input_dim, 1)
-
-    def forward(self, x):
-        return self.linear(x)
-
 
 
 def makeParam(dataset : str) -> Dict:
@@ -102,16 +99,30 @@ def unparseParam(cfg_param : os.path) -> Dict:
     params = importlib.import_module(cfg_param.split(".")[0].replace("/",".")).cfg
     return params
 
-def unparseCheckpoint(checkpoint : os.path) -> nn.Module:
-    model = testModel(10) # RegNet()
-    optimizer = optim.AdamW(model.parameters())
+def unparseModelConfig(depth : int, n_classes : int):
+    if depth == None:
+        model = torchvision.models.resnet50(pretrained=True)
+    if depth == 18:
+        model = resnet18(n_classes)
+    if depth == 34:
+        model = resnet34(n_classes)
+    if depth == 50:
+        model = resnet50(n_classes) # RegNet()
+    if depth == 101:
+        model = resnet101(n_classes)
 
-    checkpoint = torch.load(checkpoint)
+    return model
 
-    print(f"\nyour checkpoint : {checkpoint}\n")
+def unparseCheckpoint(model, cfg_param, checkpoint : Union[str, None]) -> nn.Module:
+    optimizer = optim.AdamW(model.parameters(), lr=cfg_param["lr"], weight_decay=cfg_param["weight_decay"])
 
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    if checkpoint != None:
+        checkpoint = torch.load(checkpoint)
+
+        print(f"\nyour checkpoint : {checkpoint}\n")
+
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     return model, optimizer
 
@@ -120,3 +131,9 @@ def makeModel() -> nn.Module:
     model = torchvision.models.resnet34(pretrained=True, progress=True)
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.001)
     return model, optimizer
+
+
+
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group["lr"]
