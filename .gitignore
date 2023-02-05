@@ -1,5 +1,14 @@
 data
 !data/kitti/train/readme.txt
 !data/download_dataset.sh
+
+__pycache__
 */__pycache__
 */*/__pycache__
+*/*/*/__pycache__
+
+.vscode
+.idea
+
+# */__init__.py
+# */*/*/__init__.py
