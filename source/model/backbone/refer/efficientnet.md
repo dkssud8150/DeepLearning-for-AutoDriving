@@ -201,13 +201,13 @@ baseline network를 EfficientNet-B0로 지정한 후 모델을 스케일업하�
 - pytorch source code : [https://github.com/lukemelas/EfficientNet-PyTorch.git](https://github.com/lukemelas/EfficientNet-PyTorch.git)
 
 ## thesis
-    - [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/pdf/1905.11946.pdf)
+- [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/pdf/1905.11946.pdf)
 
 ## reference
-    - https://lynnshin.tistory.com/53
-    - https://ropiens.tistory.com/110
-    - https://visionhong.tistory.com/19
-    - https://wandukong.tistory.com/20
-    - https://bellzero.tistory.com/17
-    - https://greeksharifa.github.io/computer%20vision/2022/03/01/EfficientNet/
+- https://lynnshin.tistory.com/53
+- https://ropiens.tistory.com/110
+- https://visionhong.tistory.com/19
+- https://wandukong.tistory.com/20
+- https://bellzero.tistory.com/17
+- https://greeksharifa.github.io/computer%20vision/2022/03/01/EfficientNet/
     
