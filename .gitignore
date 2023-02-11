@@ -10,5 +10,6 @@ __pycache__
 .vscode
 .idea
 
+test.ipynb
 # */__init__.py
 # */*/*/__init__.py
