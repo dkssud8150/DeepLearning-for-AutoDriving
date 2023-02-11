@@ -28,7 +28,7 @@ class KITTIloss(nn.Module):
 
         return loss_value
 
-class BDDloss(nn.module):
+class BDDloss(nn.Module):
     def __init__(self, device):
         super(BDDloss, self).__init__()
         self.loss = nn.CrossEntropyLoss().to(device)
@@ -39,7 +39,7 @@ class BDDloss(nn.module):
         return loss_value
 
 
-def get_criterion(crit = "cvpr", device = torch.device("cput")):
+def get_criterion(crit = "cvpr", device = torch.device("cpu")):
     if crit == "cvpr":
         return CVPRloss(device=device)
     elif crit == "bdd100k":
