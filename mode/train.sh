@@ -1,0 +1,1 @@
+python main.py --gpus 0 -depth 50 -d "kitti" --mode "train"
