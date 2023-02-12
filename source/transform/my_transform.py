@@ -5,11 +5,12 @@ import torch
 import torchvision.transforms as transforms
 
 def getTransform(hyper_param = None, is_train=True):
+    # https://dacon.io/codeshare/4379
     if is_train:
-        data_transform = transforms.Compose([ResizeImg(new_size=(hyper_param["img_width"], hyper_param["img_height"])),
+        data_transform = transforms.Compose([ResizeImg(new_size=(int(hyper_param["img_size"][0]), int(hyper_param["img_size"][1]))),
                                              ToTensor()])
     else:
-        data_transform = transforms.Compose([ResizeImg(new_size=(hyper_param["img_width"], hyper_param["img_height"])),
+        data_transform = transforms.Compose([ResizeImg(new_size=(hyper_param["img_size"][0], hyper_param["img_size"][1])),
                                              ToTensor()])
     
     return data_transform
