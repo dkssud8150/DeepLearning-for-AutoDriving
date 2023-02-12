@@ -39,7 +39,7 @@ class BDDloss(nn.Module):
         return loss_value
 
 
-def get_criterion(crit = "cvpr", device = torch.device("cpu")):
+def get_criterion(device = torch.device("cpu"), crit = "cvpr"):
     if crit == "cvpr":
         return CVPRloss(device=device)
     elif crit == "bdd100k":
