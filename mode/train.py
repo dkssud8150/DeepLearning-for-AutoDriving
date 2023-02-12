@@ -55,7 +55,7 @@ class Train():
         self.dataloader = dataloader
         self.torchwriter = torchwriter
 
-        self.loss = get_criterion(self.device, self.model.num_classes)
+        self.loss = get_criterion(self.device, crit="cvpr")
         
         self.scheduler_multistep = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[20,40,60], gamma=0.5)
 
@@ -152,27 +152,26 @@ def training(hyper_param : os.path,
     #######################################
     # load model and optimizer parameter in checkpoint file if checkpoint is exist
     #######################################
-    if os.path.isfile(checkpoint) and model_depth != None:
-        model, optimizer = unparseCheckpoint(checkpoint, model_depth, n_classes)
+    if model_depth != None:
+        model, optimizer = unparseCheckpoint(checkpoint, model, params)
     else:
         raise ValueError("checkpoint or config file path is incorrect!")
 
-
-    print(f"model info : {torchsummary.summary(model, input_size=(3, 1242, 375), device='cpu')}\
-            optimizer : {optimizer}")
+    # input size = (c,w,h)
+    print(f"model info : {torchsummary.summary(model, input_size=(3, 224, 224), batch_size=2, device='cpu')} optimizer : {optimizer}")
 
 
     ####################################
     # Transform
     ####################################
-    train_transform = getTransform(hyper_param = hyper_param, is_train=True)
+    train_transform = getTransform(hyper_param = params, is_train=True)
 
 
     ####################################
     # dataloader 
     ####################################
-    dataset = datasets(params=hyper_param, dataset_name='cvpr',transform=train_transform, is_train=True)
-    dataloader = DataLoader(dataset, batch_size=hyper_param["train_bs"], num_workers=0, pin_memory=True, drop_last=True, shuffle=True, collate_fn=collate_fn)
+    dataset = datasets(dataset_name='cvpr',transform=train_transform, is_train=True)
+    dataloader = DataLoader(dataset, batch_size=params["train_bs"], num_workers=0, pin_memory=True, drop_last=True, shuffle=True, collate_fn=collate_fn)
     
 
     ####################################
