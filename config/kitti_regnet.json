@@ -1,8 +1,8 @@
 {
     "cfg" : {
         "seed" : 42,
-        "img_width" : "1242",
-        "img_height" : "375",
+        "img_width" : 1242,
+        "img_height" : 375,
         "train_bs" : 16,
         "valid_bs" : 16,
         "num_classes" : 25,
