@@ -113,8 +113,8 @@ def unparseModelConfig(depth : int, n_classes : int):
 
     return model
 
-def unparseCheckpoint(model, cfg_param, checkpoint : Union[str, None]) -> nn.Module:
-    optimizer = optim.AdamW(model.parameters(), lr=cfg_param["lr"], weight_decay=cfg_param["weight_decay"])
+def unparseCheckpoint(checkpoint : Union[str, None], model, params) -> nn.Module:
+    optimizer = optim.AdamW(model.parameters(), lr=params["lr"], weight_decay=params["weight_decay"])
 
     if checkpoint != None:
         checkpoint = torch.load(checkpoint)
