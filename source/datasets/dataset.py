@@ -13,37 +13,29 @@ from torch.utils.data import Dataset
 import torchvision
 
 # --------------------- image processing package ---------------------- #
+import cv2
 from PIL import Image
 
 """
-문제 1. color 이미지보다 label 이미지가 약 8배 많음... 원래는 같음. color 데이터가 덜 풀린듯.
-문제 2. 8배가 많은 이유는 ConvertVideotoCSV.py 에 있는 듯. 이를 분석해야 함. => 제출을 위한 CSV를 만드는데, 필요한 오차들을 계산하기 위한 prediction value들을 추가해주는 용도인듯
-문제 3. train_video_list 폴더에 있는 파일들 중 한 파일마다 한 timestamp 마다의 <image - label> 로 구성되어 있음.
-문제 4. label format
-    The training images labels are encoded in a format mixing spatial and label/instance information:
-    - All the images are the same size (width, height) of the original images
-    - Pixel values indicate both the label and the instance.
-    - Each label could contain multiple object instances.
-    - int(PixelValue / 1000) is the label (class of object)
-    - PixelValue % 1000 is the instance id
-    - For example, a pixel value of 33000 means it belongs to label 33 (a car), is instance #0, while the pixel value of 33001 means it also belongs to class 33 (a car) , and is instance #1. These represent two different cars in an image.
-문제 5. opencv가 PIL보다 속도는 빠르나, torchvision과의 호환성이 PIL이 더 좋다. 그래서 딥러닝을 할 시에는 PIL을, 딥러닝 이외의 영상처리에서는 OpenCV를 사용하고자 함.
+문제 1. ConvertVideotoCSV.py => 제출을 위한 CSV를 만드는데, 필요한 오차들을 계산하기 위한 prediction value들을 추가해주는 용도인듯
+문제 2. train_video_list 폴더에 있는 파일들 중 한 파일마다 한 timestamp 마다의 <image - label> 로 구성되어 있음.
+문제 3. opencv가 PIL보다 속도는 빠르나, torchvision과의 호환성이 PIL이 더 좋다. 그래서 딥러닝을 할 시에는 PIL을, 딥러닝 이외의 영상처리에서는 OpenCV를 사용하고자 함.
 """
 
 class datasets(Dataset):
     
-    base_dir = "C:/Users/dkssu/github/dl4ad/data/"
+    base_dir = "data/"
+    total_label = {33:'car', 34:"motorbicycle", 35:"bicycle", 36:"person", 38:"truck", 39:"bus", 40:"tricycle"}
+    classes = list(total_label.keys())
 
     def __init__(self,
-                 params : Dict,
                  dataset_name : str,
                  transform = None, 
                  is_train : bool = True):
         super(datasets, self).__init__()
 
-        self.params = params
         self.transform = transform
-        self.is_train = is_train
+        self.is_train = is_train            
         self.base_dir += dataset_name
         self.dataset_name = dataset_name                    
 
@@ -76,29 +68,36 @@ class datasets(Dataset):
     def __getitem__(self, idx):
         img_file = self.img_data[idx]
         
+        if not os.path.isfile(img_file):
+             return None
+        
         img = Image.open(img_file).convert(mode="RGB")
-        img_w, img_h = img.shape[:2]
+        img_w, img_h = img.size
 
         # train
         if self.is_train:
             anno_file = self.label_data[idx]
-            if not os.path.isdir(anno_file):
+            if not os.path.isfile(anno_file):
                 return None
 
-            anno = Image.open(anno_file).convert(mode="RGB")
+            anno = cv2.imread(anno_file)
 
-            labels = []
-            instance_ids = []
             if self.dataset_name == "bdd100k":
                 print("bdd100k")
             elif self.dataset_name == "nuscenes":
                 print("nucenes")
             elif self.dataset_name == "cvpr":
                 print("cvpr 2018 dataset")
-                anno = np.asarray(anno) # array는 copy=True, asarray는 copy=False
                 
-                label = torch.as_tensor((anno / 1000), dtype=torch.int64)       # semantic
-                instance_id = torch.as_tensor((anno % 1000), dtype=torch.int64) # instance
+                # Image에서 바로 tensor로는 변경 불가능. Image -> numpy -> tensor
+                anno = np.asarray(anno) # array는 copy=True, asarray는 copy=False
+
+                # https://www.kaggle.com/code/ishootlaser/cvrp-2018-starter-kernel-u-net-with-resnet50
+                # https://www.kaggle.com/code/kmader/data-preprocessing-and-unet-segmentation-gpu
+                # semantic id # TODO
+                label = (anno * ((anno >= self.classes[0] * 1000) & (anno < (self.classes[-1]+1) * 1000))).astype(np.uint16)
+                # instance id # TODO
+                instance_id = torch.tensor((anno % 1000), dtype=torch.int64)
                 
             labels = torch.as_tensor((np.unique(label)[1:], ), dtype=torch.int64)
             obj_ids = np.unique(instance_id)[1:] # remove background
@@ -109,7 +108,7 @@ class datasets(Dataset):
 
             image_id = torch.tensor([idx])
 
-            is_crowd = torch.zeros((num_obj, ), dtype=torch.int64)
+            is_crowd = torch.zeros((num_obj, ), dtype=torch.int64) # torch.size([num_obj]) : tensor([0., 0., 0., ...])
             batch_idx = torch.zeros((num_obj, ), dtype=torch.int64) # 객체 개수만큼 생성
 
             target_data = {}
