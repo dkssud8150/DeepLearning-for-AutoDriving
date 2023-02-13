@@ -15,6 +15,7 @@ import torchvision
 # --------------------- image processing package ---------------------- #
 import cv2
 from PIL import Image
+from skimage.segmentation import find_boundaries
 
 """
 문제 1. ConvertVideotoCSV.py => 제출을 위한 CSV를 만드는데, 필요한 오차들을 계산하기 위한 prediction value들을 추가해주는 용도인듯
@@ -80,31 +81,46 @@ class datasets(Dataset):
             if not os.path.isfile(anno_file):
                 return None
 
-            anno = cv2.imread(anno_file)
+            # opencv는 무조건 uint8로 읽어와져서, pixelValue를 정확하게 가져오기 위해서는 pillow
+            anno = Image.open(anno_file)
 
             if self.dataset_name == "bdd100k":
                 print("bdd100k")
             elif self.dataset_name == "nuscenes":
                 print("nucenes")
             elif self.dataset_name == "cvpr":
-                print("cvpr 2018 dataset")
                 
                 # Image에서 바로 tensor로는 변경 불가능. Image -> numpy -> tensor
                 anno = np.asarray(anno) # array는 copy=True, asarray는 copy=False
 
+                '''
+                https://github.com/dkssud8150/dev_yolov3/blob/master/dataloader/yolo_data.py
+                https://dacon.io/en/codeshare/4379
+                https://colab.research.google.com/drive/1CrDusRQdmRELrWyBdt4uS3AoAr8izrWI?authuser=1&hl=ko
                 # https://www.kaggle.com/code/ishootlaser/cvrp-2018-starter-kernel-u-net-with-resnet50
                 # https://www.kaggle.com/code/kmader/data-preprocessing-and-unet-segmentation-gpu
-                # semantic id # TODO
-                label = (anno * ((anno >= self.classes[0] * 1000) & (anno < (self.classes[-1]+1) * 1000))).astype(np.uint16)
-                # instance id # TODO
-                instance_id = torch.tensor((anno % 1000), dtype=torch.int64)
-                
-            labels = torch.as_tensor((np.unique(label)[1:], ), dtype=torch.int64)
-            obj_ids = np.unique(instance_id)[1:] # remove background
-            num_obj = len(obj_ids)
+                # edge 기반의 segmentation의 장점은 복잡하지 않고, 영역을 분리할 때 엣지가 중요한 특징이 된다. 엣지 기반은 엣지 검출(엣지에 있는 픽셀을 찾음)과 엣지 연결(엣지에 있는 픽셀들을 연결)으로 이루어져 있다.
+                '''
 
-            mask = anno == obj_ids[:, None, None]
-            mask = torch.as_tensor(mask, dtype=torch.uint8)
+                # split background and foreground
+                foreground = (anno * ((anno >= self.classes[0] * 1000) & (anno < (self.classes[-1]+1) * 1000))).astype(np.uint8) # [img_h,img_w]
+
+                # semantic id # TODO
+                mask_core = np.zeros((anno.shape[0], anno.shape[1], len(self.classes)))
+                for i, c in enumerate(self.classes):
+                    mask_core[:,:,i] = np.squeeze(((foreground / 1000).astype(np.int32) == c).astype(np.bool)) # 각 객체 별 분류
+                
+                # (anno.shape[0], anno.shape[1], 1)
+                # instance id # TODO
+                # instance_id = torch.tensor((anno % 1000), dtype=torch.int64)
+                mask_edge = find_boundaries(foreground, mode='outer').astype(np.bool)
+            
+            # semantic id
+            labels = torch.as_tensor((np.unique(foreground)[1:], ), dtype=torch.int64)
+            num_obj = len(self.classes)
+
+            mask_core = torch.as_tensor(mask_core, dtype=torch.uint8)
+            mask_edge = torch.as_tensor(mask_edge, dtype=torch.uint8)
 
             image_id = torch.tensor([idx])
 
@@ -113,20 +129,16 @@ class datasets(Dataset):
 
             target_data = {}
             target_data["label"] = labels
-            target_data["mask"] = mask
+            target_data["mask_core"] = mask_core
+            target_data["mask_edge"] = mask_edge
             target_data["image_id"] = image_id
             target_data["is_crowd"] = is_crowd
             target_data["batch_idx"] = batch_idx
 
             if self.transform is not None:
-                img, label = self.transform((img, target_data))
-
-            # TODO: to be continue..
-            '''
-            https://github.com/dkssud8150/dev_yolov3/blob/master/dataloader/yolo_data.py
-            https://dacon.io/en/codeshare/4379
-            https://colab.research.google.com/drive/1CrDusRQdmRELrWyBdt4uS3AoAr8izrWI?authuser=1&hl=ko
-            '''
+                data = self.transform(image=np.array(img), mask=np.array(target_data["mask_core"]))
+                img = data["image"]
+                target_data["label"] = data["mask"]
 
             return img, target_data
 
