@@ -172,7 +172,9 @@ def training(hyper_param : os.path,
     ####################################
     dataset = datasets(dataset_name='cvpr',transform=train_transform, is_train=True)
     dataloader = DataLoader(dataset, batch_size=params["train_bs"], num_workers=0, pin_memory=True, drop_last=True, shuffle=True, collate_fn=collate_fn)
-    
+
+    # should check the dataloader data using next.
+    img, batch = next(dataloader)
 
     ####################################
     # Train
