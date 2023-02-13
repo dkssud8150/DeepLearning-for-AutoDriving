@@ -9,6 +9,8 @@ from albumentations.pytorch import transforms
 
 def getTransform(hyper_param = None, is_train=True):
     # https://dacon.io/codeshare/4379
+    # https://89douner.tistory.com/312
+    # must search for the most famous tranform method.
     if is_train:
         data_transform = A.Compose([
                                     A.RandomCrop(width=256, height=256),
