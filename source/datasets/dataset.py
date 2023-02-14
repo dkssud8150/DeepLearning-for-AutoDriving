@@ -128,12 +128,12 @@ class datasets(Dataset):
             batch_idx = torch.zeros((num_obj, ), dtype=torch.int64) # 객체 개수만큼 생성
 
             target_data = {}
+            target_data["image_id"] = image_id
             target_data["label"] = labels
             target_data["mask_core"] = mask_core
             target_data["mask_edge"] = mask_edge
-            target_data["image_id"] = image_id
-            target_data["is_crowd"] = is_crowd
-            target_data["batch_idx"] = batch_idx
+            target_data["is_crowd"] = is_crowd.view(-1,1)
+            target_data["batch_idx"] = batch_idx.view(-1,1)
 
             if self.transform is not None:
                 data = self.transform(image=np.array(img), mask=np.array(target_data["mask_core"]))
