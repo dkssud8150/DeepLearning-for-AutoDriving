@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 import torch
-import torchvision.transforms as transforms
+import torchvision.transforms as T
 
 import albumentations as A
 from albumentations.pytorch import transforms
@@ -16,6 +16,8 @@ def getTransform(hyper_param = None, is_train=True):
                                     A.RandomCrop(width=256, height=256),
                                     A.HorizontalFlip(p=0.5),
                                     A.RandomBrightnessContrast(p=0.2),
+                                    T.ConvertImageDtype(torch.float),
+                                    A.Normalize(mean=0.5, std=0.5),
                                     transforms.ToTensorV2(transpose_mask=True),
                                     ])
         # data_transform = transforms.Compose([ResizeImg(new_size=(int(hyper_param["img_size"][0]), int(hyper_param["img_size"][1]))),
