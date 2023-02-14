@@ -1,8 +1,8 @@
 cfg = {
     "seed" : 42,
     "img_size" : (1242, 375),
-    "train_bs" : 16,
-    "valid_bs" : 16,
+    "train_bs" : 4,
+    "valid_bs" : 4,
     "num_classes" : 25,
     "n_fold" : 5,
     "model_name" : "regnet",
