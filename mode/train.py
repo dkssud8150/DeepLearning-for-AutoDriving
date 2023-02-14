@@ -72,7 +72,8 @@ class Train():
                     continue
 
                 img, label = batch
-                img = img.to(self.device, non_blocking=True)
+                # pytorch default type is floatTensor, but if input type is byteTensor(uint8), error would occur.
+                img = img.to(self.device, non_blocking=True).float()
 
                 pred = self.model(img)
 
@@ -100,14 +101,25 @@ class Train():
                             checkpoint_path)
 
         
-def collate_fn(batch):
+def collateFn(batch):
     '''
     _summary_ : 
 
     Args:
-        batch (_type_): _description_
+        batch (_type_): 
     '''
-    pass
+    # check exception
+    batch = [data for data in batch if data is not None]
+    if len(batch) == 0:
+        return
+
+    imgs, target_datas = list(zip(*batch))
+    imgs = torch.stack([img for img in imgs])
+
+    for i, target in enumerate(target_datas):
+        target["batch_idx"] = i
+    
+    return imgs, target_datas
 
 
 def training(hyper_param : os.path, 
@@ -171,10 +183,10 @@ def training(hyper_param : os.path,
     # dataloader 
     ####################################
     dataset = datasets(dataset_name='cvpr',transform=train_transform, is_train=True)
-    dataloader = DataLoader(dataset, batch_size=params["train_bs"], num_workers=0, pin_memory=True, drop_last=True, shuffle=True, collate_fn=collate_fn)
+    dataloader = DataLoader(dataset, batch_size=params["train_bs"], num_workers=0, pin_memory=True, drop_last=True, shuffle=True, collate_fn=collateFn)
 
     # should check the dataloader data using next.
-    img, batch = next(dataloader)
+    # img, batch = next(iter(dataloader))
 
     ####################################
     # Train
