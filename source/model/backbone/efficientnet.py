@@ -1,5 +1,5 @@
 # -*- encoding: etf-8 -*-
-# https://github/lukemelas/EfficientNet-PyTorch/blob/master/efficientnet_pytorch/model.py
+# https://github.com/lukemelas/EfficientNet-PyTorch/blob/master/efficientnet_pytorch/model.py
 
 import math
 
